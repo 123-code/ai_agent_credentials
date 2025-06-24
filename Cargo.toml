@@ -1,0 +1,8 @@
+[package]
+name = "rust_ji"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bcrypt = "0.17"
+rusqlite = { version = "0.26", features = ["bundled"] }
