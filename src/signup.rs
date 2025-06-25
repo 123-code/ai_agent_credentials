@@ -2,8 +2,7 @@ use std::io;
 use rusqlite::Connection;
 use colored::Colorize;
 use dialoguer::{theme::ColorfulTheme, Select};
-use crate::auth::verify_password;
-use crate::database::{retrieve_password, create_session, insert_password, create_table};
+use agent_credentials::{verify_password, database::{retrieve_password, create_session, insert_password, create_table}};
 use crate::input::{get_username, get_password};
 
 pub fn sign_up() {

@@ -10,3 +10,16 @@ rpassword = "7.4"
 chrono = { version = "0.4", features = ["serde"] }
 colored = "2.0"
 dialoguer = "0.11.0"
+pyo3 = { version = "0.22.0", features = ["extension-module"] }
+rsa = "0.7"
+rand = "0.8"
+
+[lib]
+name = "agent_credentials"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "rust_ji"
+path = "src/main.rs" 
+
