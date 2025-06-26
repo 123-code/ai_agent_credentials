@@ -1,25 +1,45 @@
 [package]
-name = "rust_ji"
+name = "ai_agent_credentials"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
-bcrypt = "0.17"
-rusqlite = { version = "0.26", features = ["bundled"] }
-rpassword = "7.4"
-chrono = { version = "0.4", features = ["serde"] }
-colored = "2.0"
-dialoguer = "0.11.0"
-pyo3 = { version = "0.22.0", features = ["extension-module"] }
-rsa = "0.7"
-rand = "0.8"
-
 [lib]
-name = "agent_credentials"
-path = "src/lib.rs"
+name = "ai_agent_credentials"
 crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+rusqlite = "0.29.0"
+chrono = "0.4.24"
+ring = "0.16.20"
+hex = "0.4.3"
+base64 = "0.21.0"
+aes-gcm = "0.10"
+pbkdf2 = "0.12"
+rand_core = "0.6"
+hmac = "0.12"
+sha2 = "0.10"
+bcrypt = "0.15"
+zerocopy = "0.7"
+rand = "0.8"
+rsa = "0.9"
+base64ct = "1.8"
+
+# Additional crates used by the CLI modules
+colored = "2.0"
+dialoguer = "0.10"
+rpassword = "7.2"
+
+[features]
+extension-module = ["pyo3/extension-module"]
+
+[dependencies.pyo3]
+version = "0.20.0"
+features = ["extension-module"]
+optional = true
 
 [[bin]]
 name = "rust_ji"
 path = "src/main.rs" 
 
+[tool.maturin]
+cargo-extra-args = "--features extension-module"

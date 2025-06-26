@@ -1,5 +1,5 @@
 use rusqlite::Connection;
-use agent_credentials::{verify_password, database::{retrieve_password, create_session}};
+use ai_agent_credentials::{verify_password, database::{retrieve_password, create_session}};
 use crate::input::{get_username, get_password};
 
 pub fn log_in() {

@@ -1,6 +1,8 @@
 use rusqlite::{params, Connection, Result};
 use chrono::{DateTime,Utc,Duration};
 use crate::auth::hash_password;
+use crate::encrypt_rsa::encrypt_data;
+use crate::encrypt_aes::encrypt_aes;
 
 pub fn check_timestamp_validity(rfc3339_timestamp: &str) -> bool { 
     let parsed = DateTime::parse_from_rfc3339(rfc3339_timestamp)
@@ -42,7 +44,8 @@ pub fn create_table(conn: &Connection) -> Result<()> {
         "CREATE TABLE IF NOT EXISTS passwords (
             id INTEGER PRIMARY KEY,
             username TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+        
         )",
         [],
     )?;
@@ -51,9 +54,18 @@ pub fn create_table(conn: &Connection) -> Result<()> {
         "CREATE TABLE IF NOT EXISTS sessions (
             id INTEGER PRIMARY KEY,
             username TEXT NOT NULL,
-            timestamp TEXT NOT NULL
+            timestamp TEXT NOT NULL,
+            private_key TEXT NOT NULL,
         )",
         [],
+    )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS keys(
+            id INTEGER PRIMARY KEY,
+            master_password TEXT NOT NULL,
+            encrypted_private_key TEXT NOT NULL,
+        )",
     )?;
     
     // Then run migrations
@@ -62,12 +74,19 @@ pub fn create_table(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-pub fn insert_password(conn: &Connection, username: &str, password: &str) -> Result<(), rusqlite::Error> {
-    let hashed_password = hash_password(password);
+pub fn insert_master_password(conn: &Connection, master_password: &Vec<u8>) -> Result<(), rusqlite::Error> {
+    let mut insert_stmt = conn.prepare("INSERT INTO keys (master_password) VALUES (?1)")?;
+    insert_stmt.execute(params![master_password])?;
+    Ok(())
+}
+
+pub fn insert_password(conn: &Connection, username: &str, password: &Vec<u8>) -> Result<(), rusqlite::Error> {
+   
+    let encrypted_password = encrypt_aes(password,password.as_bytes());
     let mut insert_stmt = conn.prepare(
         "INSERT OR IGNORE INTO passwords (provider, username, password) VALUES (?1, ?2, ?3)"
     )?;
-    insert_stmt.execute(params!["Manual", username, hashed_password])?;
+    insert_stmt.execute(params!["Manual", username, encrypted_password])?;
     Ok(())
 }
 
@@ -83,5 +102,11 @@ pub fn create_session(conn: &Connection, username: &str) -> Result<()> {
     let timestamp = Utc::now().to_rfc3339();
     let mut stmt = conn.prepare("INSERT INTO sessions (username, timestamp) VALUES (?1, ?2)")?;
     stmt.execute(params![username, timestamp])?;
+    Ok(())
+}
+
+pub fn store_private_key(conn: &Connection, username: &str, private_key: &str) -> Result<()> {
+    let mut stmt = conn.prepare("UPDATE sessions SET private_key = ?1 WHERE username = ?2")?;
+    stmt.execute(params![private_key, username])?;
     Ok(())
 } 
