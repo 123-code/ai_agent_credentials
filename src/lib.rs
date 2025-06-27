@@ -66,7 +66,7 @@ pub mod database {
         conn.execute("CREATE TABLE IF NOT EXISTS keys(
             id INTEGER PRIMARY KEY,
             master_password TEXT NOT NULL,
-            encrypted_private_key TEXT NOT NULL,
+            encrypted_private_key TEXT NOT NULL
         )",
         [],
         )?;
@@ -77,8 +77,8 @@ pub mod database {
     }
 
     pub fn insert_master_password(conn: &Connection, master_password: &Vec<u8>) -> Result<(), rusqlite::Error> {
-        let mut insert_stmt = conn.prepare("INSERT INTO keys (master_password) VALUES (?1)")?;
-        insert_stmt.execute(params![master_password])?;
+        let mut insert_stmt = conn.prepare("INSERT INTO keys (master_password, encrypted_private_key) VALUES (?1, ?2)")?;
+        insert_stmt.execute(params![master_password, ""])?;
         Ok(())
     }
 
@@ -113,11 +113,19 @@ pub mod database {
         Ok(())
     }
 
-    pub fn retrieve_master_password(conn: &Connection) -> Result<String> {
+    pub fn retrieve_session(conn: &Connection) -> Result<String> {
+        let mut stmt = conn.prepare("SELECT username FROM sessions LIMIT 1")?;
+        let mut rows = stmt.query(params![])?;
+        let row = rows.next()?.expect("No session found");
+        let username: String = row.get(0)?;
+        Ok(username)
+    }
+
+    pub fn retrieve_master_password(conn: &Connection) -> Result<Vec<u8>> {
         let mut stmt = conn.prepare("SELECT master_password FROM keys LIMIT 1")?;
         let mut rows = stmt.query(params![])?;
         let row = rows.next()?.expect("No master password found");
-        let master_password: String = row.get(0)?;
+        let master_password: Vec<u8> = row.get(0)?;
         Ok(master_password)
     }
 }

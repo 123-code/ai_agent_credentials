@@ -12,7 +12,7 @@ pub fn generate_key(conn: &rusqlite::Connection, username: &str) -> (RsaPrivateK
     let bits = 2048;
     let private_key = RsaPrivateKey::new(&mut rng, bits).unwrap();
     let public_key = RsaPublicKey::from(&private_key);
-    let encrypted_private_key = encrypt_aes(&private_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::LF).unwrap().to_string(), retrieve_master_password(conn).expect("Failed to retrieve master password").as_bytes());
+    let encrypted_private_key = encrypt_aes(&private_key.to_pkcs1_pem(rsa::pkcs1::LineEnding::LF).unwrap().to_string(), &retrieve_master_password(conn).expect("Failed to retrieve master password"));
     // Store the encrypted private key in the database
     ai_agent_credentials::database::store_private_key(conn, username, &encrypted_private_key);
     (private_key, public_key)
