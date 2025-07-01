@@ -1,0 +1,16 @@
+[package]
+name = "ai_credentials"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "ai_credentials"
+crate-type = ["cdylib"]
+
+[dependencies]
+keyring = "2.0"
+dotenv = "0.15.0"
+env-file-reader = "0.3.0"
+regex = "1"
+bcrypt = "0.15"
+pyo3 = { version = "0.20", features = ["extension-module"] }
