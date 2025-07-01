@@ -19,4 +19,4 @@ ai_credentials.register_credentials('.env')
 # Retrieve credentials for a specific username
 password = ai_credentials.get_credentials('.env', 'user@example.com')
 print(f'Retrieved password: {password}')
-``` 
+``` # Force refresh
