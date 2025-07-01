@@ -1,35 +1,47 @@
-import pytest
-import tempfile
+import unittest
 import os
 import ai_credentials
 
-def test_password_hashing():
-    password = "test_password"
-    hashed = ai_credentials.hash_password(password)
-    assert ai_credentials.verify_password(password, hashed)
-    assert not ai_credentials.verify_password("wrong_password", hashed)
+class TestAICredentials(unittest.TestCase):
+    def setUp(self):
+     
+        with open('test.env', 'w') as f:
+            f.write('TEST_USERNAME=user@example.com\n')
+            f.write('TEST_PASSWORD=secret123\n')
 
-def test_master_password():
-    master_pass = "master123"
-    ai_credentials.set_master_password(master_pass)
-    assert ai_credentials.verify_master_password(master_pass)
-    assert not ai_credentials.verify_master_password("wrong")
+    def tearDown(self):
 
-def test_credentials_management():
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as f:
-        f.write("GMAIL_USERNAME=test@example.com\n")
-        f.write("GMAIL_PASSWORD=testpass123\n")
-        f.flush()
-        
+        if os.path.exists('test.env'):
+            os.remove('test.env')
+
+    def test_hash_and_verify_password(self):
+        password = "test123"
+        hashed = ai_credentials.hash_password(password)
+        self.assertTrue(ai_credentials.verify_password(password, hashed))
+        self.assertFalse(ai_credentials.verify_password("wrongpass", hashed))
+
+    def test_register_and_get_credentials(self):
+        ai_credentials.register_credentials('test.env')
+        password = ai_credentials.get_credentials('test.env', 'user@example.com')
+        self.assertEqual(password, 'secret123')
+
+    @unittest.skip("Skipping due to macOS keychain requiring user interaction. Run manually if needed.")
+    def test_set_and_verify_master_password(self):
+        master_password = "masterkey123"
         try:
-            ai_credentials.register_credentials(f.name)
-            password = ai_credentials.get_credentials(f.name, "test@example.com")
-            assert password == "testpass123"
-        finally:
-            os.unlink(f.name)
+            ai_credentials.set_master_password(master_password)
+        except RuntimeError as e:
+            if 'already exists' in str(e):
 
-if __name__ == "__main__":
-    test_password_hashing()
-    test_master_password()  
-    test_credentials_management()
-    print("All tests passed!")
+                pass
+            else:
+                raise
+        self.assertTrue(ai_credentials.verify_master_password(master_password))
+        self.assertFalse(ai_credentials.verify_master_password("wrongmaster"))
+
+    def test_get_credentials_nonexistent_user(self):
+        with self.assertRaises(KeyError):
+            ai_credentials.get_credentials('test.env', 'nonexistent@example.com')
+
+if __name__ == '__main__':
+    unittest.main()
