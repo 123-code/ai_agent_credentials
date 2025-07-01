@@ -85,3 +85,16 @@ fn ai_credentials(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(verify_master_password, m)?)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hash_and_verify_password() {
+        let password = "test123";
+        let hashed = hash_password(password).unwrap();
+        assert!(verify_password(password, &hashed).unwrap());
+        assert!(!verify_password("wrongpass", &hashed).unwrap());
+    }
+}
