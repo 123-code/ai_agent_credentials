@@ -14,7 +14,7 @@ def extract_services(env_content):
     return matches
 
 
-llm = ChatGoogle(model='gemini-2.5-flash', api_key='AIzaSyBuZRAro4cg9q3WQdj9i9UkvEHYZ6PUtuA')
+llm = ChatGoogle(model='gemini-2.5-flash', api_key='YOUR GEMINI API KEY')
 
 
 task = "Login to gmail"
