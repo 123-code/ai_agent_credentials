@@ -17,46 +17,80 @@ pub fn verify_password(password: &str, hashed_password: &str) -> PyResult<bool> 
 }
 
 #[pyfunction]
-pub fn register_credentials(env_path:&str) -> PyResult<()> {
-    let re = Regex::new(r"_USERNAME$").unwrap();
+pub fn register_credentials(env_path: &str) -> PyResult<()> {
+    let re_username = Regex::new(r"_USERNAME$").unwrap();
+    let re_password = Regex::new(r"_PASSWORD$").unwrap();
     let env_variables = read_file(env_path).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-    for (key, value) in env_variables {
-        if re.is_match(&key) {
-            continue;
+    
+
+    for (key, value) in &env_variables {
+        if re_password.is_match(key) {
+  
+            let service = key.replace("_PASSWORD", "");
+
+            let username_key = format!("{}_USERNAME", service);
+            let username = env_variables.iter()
+                .find(|(k, _)| **k == username_key)
+                .map(|(_, v)| v.clone())
+                .unwrap_or_else(|| "".to_string());
+            
+            if username.is_empty() {
+                continue; 
+            }
+            
+           
+            let entry = Entry::new(&service, &username).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+    
+            entry.set_password(value).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
         }
-        let entry = Entry::new(&key, &value).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-        entry.set_password(&value).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+
     }
     Ok(())
 }
 
 #[pyfunction]
-pub fn get_credentials(env_path: &str, username: &str) -> PyResult<String> {
-    let re_username = Regex::new(r"_USERNAME$").unwrap();
+pub fn register_username(env_path:&str,username:&str) -> PyResult<()> {
+    let re = Regex::new(r"_PASSWORD$").unwrap();
     let env_variables = read_file(env_path).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-    let mut target_service = String::new();
-    
-    for (key, value) in &env_variables {
-        if re_username.is_match(key) && value == username {
-            target_service = key.replace("_USERNAME", "");
-            break;
+    for(key,value) in env_variables{
+        if re.is_match(&key){
+            continue
         }
+        let entry = String::new();
     }
-    
-    if target_service.is_empty() {
-        return Err(pyo3::exceptions::PyKeyError::new_err(format!("Username '{}' not found in credentials", username)));
-    }
-    
-    let password_key = format!("{}_PASSWORD", target_service);
-    for (key, value) in &env_variables {
-        if key == &password_key {
-            let entry = Entry::new(key, value).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            let password = entry.get_password().map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-            return Ok(password);
-        }
-    }
-    
-    Err(pyo3::exceptions::PyKeyError::new_err(format!("Password for username '{}' not found", username)))
+    Ok(())
+}
+
+#[pyfunction]
+pub fn get_credentials(env_path: &str, service: &str) -> PyResult<(String, String)> {
+    let username_key = format!("{}_USERNAME", service);
+
+ 
+    let env_variables = read_file(env_path)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+
+ 
+    let username = env_variables
+        .iter()
+        .find(|(k, _)| **k == username_key)
+        .map(|(_, v)| v.clone())
+        .ok_or_else(|| {
+            pyo3::exceptions::PyKeyError::new_err(format!(
+                "Username key '{}' not found in .env file",
+                username_key
+            ))
+        })?;
+
+    // Retrieve the password from the system keyring
+    let entry = Entry::new(service, &username)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+
+    let password = entry
+        .get_password()
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+
+    // Return both username and password so callers have everything they need
+    Ok((username, password))
 }
 
 #[pyfunction]

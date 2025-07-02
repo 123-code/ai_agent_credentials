@@ -3,38 +3,46 @@ from browser_use.llm import ChatGoogle
 from browser_use import Agent
 from dotenv import load_dotenv
 import asyncio
-
+import os
+import re 
 
 load_dotenv()
 
-
-llm = ChatGoogle(model='gemini-2.5-flash')
-
-
-master_password = input('Enter master password: ')
-if not ai_credentials.verify_master_password(master_password):
-    print('Invalid master password. Access denied.')
-    exit(1)
+def extract_services(env_content):
+    pattern = r'^(\w+)_USERNAME'
+    matches = re.findall(pattern,env_content,re.MULTILINE)
+    return matches
 
 
-username = 'jnarcursos@gmail.com'
-password = ai_credentials.get_credentials('.env', username)
+llm = ChatGoogle(model='gemini-2.5-flash', api_key='AIzaSyBuZRAro4cg9q3WQdj9i9UkvEHYZ6PUtuA')
 
 
-agent = Agent(
-    task=f"Login to the gmail using username: {username} and password: {password}",
-    llm=llm
-)
+task = "Login to gmail"
+service_match = re.search(r'(?i)Login to (\w+)', task)
+if service_match:
+    service = service_match.group(1).upper()
+    print(f"Extracted service: {service}")
+    print("Note: Ensure your .env file has keys in the format SERVICE_USERNAME, not SERVICE_USRRNAME")
+else:
+    service = None
+    print("Could not extract service from task")
 
 
-additional_task = input('What would you like the agent to do after login? ')
-agent.task = additional_task
 
+ai_credentials.register_credentials('.env')
+
+
+username, password = ai_credentials.get_credentials('.env', service)
+
+
+agent = Agent(task=f"Login to {service} using username: {username} and password: {password}",llm=llm)
 
 async def run_agent(agent):
     await agent.run()
 
 
+
+
 asyncio.run(run_agent(agent))
 
-print(f'Agent initialized with credentials for {username} and now handling task: {additional_task}')
+print(f'Agent initialized with credentials for {username} and now handling task:')
