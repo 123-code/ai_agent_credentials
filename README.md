@@ -1,22 +1,35 @@
 # ai_credentials
 
-A Python library for managing credentials securely using a Rust backend.
+A minimalist Python library for managing credentials securely, built in Rust.
 
 ## Installation
 
 ```bash
-pip install ai_credentials
+pip install ai-credentials
 ```
 
 ## Usage
 
+### Hash a password
 ```python
-import ai_credentials
+from ai_credentials import hash_password
+hashed = hash_password("my_password")
+```
 
-# Register credentials from .env file
-ai_credentials.register_credentials('.env')
+### Verify a password
+```python
+from ai_credentials import verify_password
+is_valid = verify_password("my_password", hashed)
+```
 
-# Retrieve credentials for a specific username
-password = ai_credentials.get_credentials('.env', 'user@example.com')
-print(f'Retrieved password: {password}')
-``` # Force refresh
+### Register credentials from a .env file
+```python
+from ai_credentials import register_credentials
+register_credentials("/path/to/.env")
+```
+
+### Get credentials for a service
+```python
+from ai_credentials import get_credentials
+username, password = get_credentials("/path/to/.env", "MY_SERVICE")
+```

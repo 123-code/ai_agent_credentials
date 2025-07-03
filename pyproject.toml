@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "ai_credentials"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python library for managing credentials with Rust backend"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -39,5 +39,5 @@ dev = ["pytest", "black", "maturin"]
 # Repository = "https://github.com/yourusername/ai_credentials.git"
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+features = ["pyo3/extension-module", "pyo3/abi3-py38"]
 # Remove compatibility restriction to allow building for all platforms 

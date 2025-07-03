@@ -13,4 +13,4 @@ dotenv = "0.15.0"
 env-file-reader = "0.3.0"
 regex = "1"
 bcrypt = "0.15"
-pyo3 = { version = "0.20", features = ["extension-module"] }
+pyo3 = { version = "0.20", features = ["extension-module", "abi3-py38"] }
